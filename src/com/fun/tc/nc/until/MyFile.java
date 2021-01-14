@@ -39,7 +39,7 @@ public class MyFile {
         try {
                writeTxtFile(text, isCover);
                String str = readData();
-              // System.out.println("*********\n" + str);
+               System.out.println("*********\n" + str);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,6 +99,7 @@ public class MyFile {
             	for (int j = 1; (temp = br.readLine()) != null; j++) {
                     buf = buf.append(temp);
                     buf = buf.append(System.getProperty("line.separator"));
+                    System.out.println(j);
                 }
             }
             
@@ -132,24 +133,11 @@ public class MyFile {
         return flag;
     }
 
-    public void readData1() {
-        try {
-            FileReader read = new FileReader(filenameTemp);
-            BufferedReader br = new BufferedReader(read);
-            String row;
-            while ((row = br.readLine()) != null) {
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public String readData() {
         String strs = "";
+        FileReader read = null;
         try {
-            FileReader read = new FileReader(new File(filenameTemp));
+            read = new FileReader(new File(filenameTemp));
             StringBuffer sb = new StringBuffer();
             char ch[] = new char[1024];
             int d = read.read(ch);

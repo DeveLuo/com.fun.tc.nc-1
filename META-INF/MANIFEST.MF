@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.ui,
  com.teamcenter.rac.common;bundle-version="11000.2.0",
  com.teamcenter.rac.ui.commands;bundle-version="11000.2.0",
  com.teamcenter.rac.tcapps;bundle-version="11000.2.0",
- com.teamcenter.rac.classification.icm;bundle-version="11000.2.0"
+ com.teamcenter.rac.classification.icm;bundle-version="11000.2.0",
+ TcSoaCoreRac;bundle-version="11000.2.0"
 Automatic-Module-Name: com.fun.tc.nc
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/swing2swt.jar,
@@ -21,3 +22,4 @@ Bundle-ClassPath: lib/swing2swt.jar,
 Import-Package: org.apache.poi.hssf.model,
  org.apache.poi.ss.usermodel,
  org.apache.poi.xssf.usermodel
+Export-Package: com.fun.tc.nc.handlers

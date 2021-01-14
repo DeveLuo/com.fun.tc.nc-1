@@ -35,31 +35,31 @@ public class UploadingReportHandler extends AbstractHandler{
 				fd.setFilterPath(System.getProperty("JAVA.HOME"));
 				fd.setFilterExtensions(new String[]{"*.pdf"});
 				fd.setFilterNames(new String[]{"PPT Files(*.pdf)"});
-				final String file = fd.open();
-				final String name = fd.getFileName();
-				final File files = new File(file);
-				if(name.contains("仿真报告.")) {
-					if(file!=null){
-						new Thread(new Runnable() {
-							
-							@Override
-							public void run() {
-								try {
-									MyDatasetUtil.createDatesetByMENCMachining(rev, name, files);
-								} catch (Exception e) {
-									MessageBox.post(e);
-									e.printStackTrace();
-								}
-							}
-						}).start();
-						
-					}else{
-						MessageBox.post("上传文件路径为空","提示",MessageBox.INFORMATION);
-					}
-				}else {
-					MessageBox.post("选择的数据集名称不是名称+仿真报告！","错误",MessageBox.ERROR);
+				String file = fd.open();
+				if (file == null) {
 					return null;
 				}
+				String file_name = fd.getFileName();
+				if (!file_name.endsWith("仿真报告.pdf") && !file_name.endsWith("仿真报告.PDF")) {
+					String name = file_name.substring(0, file_name.length() - 4);
+					String suffix = file_name.substring(file_name.length() - 3, file_name.length());
+					file_name = name + "仿真报告." + suffix;
+				}
+				final String name = file_name;
+				final File files = new File(file);
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						try {
+							MyDatasetUtil.createPDFDatesetByMENCMachining(rev, name, files);
+							MessageBox.post("上传成功","提示",MessageBox.INFORMATION);
+						} catch (Exception e) {
+							MessageBox.post(e);
+							e.printStackTrace();
+						}
+					}
+				}).start();
 			}else {
 				MessageBox.post("选择的不是工序版本！请选择工序版本进行上传操作！","错误",MessageBox.ERROR);
 			}

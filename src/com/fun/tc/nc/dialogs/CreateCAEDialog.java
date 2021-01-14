@@ -84,6 +84,8 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	
 	String MENCMachiningTemplate = "MENCMachiningTemplate";
 	
+	String MENCMachiningMasterSYNCOperationMasterProps = "MENCMachiningMasterSYNCOperationMasterProps";
+	
 	List<InterfacePropertyComponent> coms = new ArrayList<>();
 
 	private JButton assignB1;
@@ -104,6 +106,16 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 
 	private PropertyTextField os;
 
+	private PropertyLOV assign_lov1;
+	
+	TCComponentItemRevision partRev;
+
+	private PropertyTextField gy_filename;
+
+	private PropertyLOV gy_filename_unit;
+
+	private PropertyTextField gx_no;
+	
 	
 	public CreateCAEDialog(TCComponentBOMLine line, TCComponentItemRevision relationRev) throws Exception {
 		super(AIFUtility.getActiveDesktop());
@@ -174,10 +186,15 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 					MessageBox.post(this, "请指派ID", "提示", MessageBox.INFORMATION);
 					return;
 				}
+				gy_filename.setUIFValue((String)gy_filename.getEditableValue() + (String)gy_filename_unit.getEditableValue() + (String)gx_no.getEditableValue());
+
 				TCComponentForm form = createForm(id + "/" + revID);
 				TCComponentItem machining = itemType.create(id, revID, type, nameText.getText(), "", null, null, form);
 				TCComponentItemRevision rev = machining.getLatestItemRevision();
-				line.addBOMLine(line, rev, null);
+				TCComponentBOMLine subLine = line.addBOMLine(line, rev, null);
+				if (partRev != null) {
+					subLine.addBOMLine(subLine, partRev, null);
+				}
 				line.window().save();
 				if (relationRev != null) {
 					relationRev.add(relationName, rev);
@@ -185,7 +202,9 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 				rev.setRelated("IMAN_METarget", processRev.getRelatedComponents("IMAN_METarget"));
 				List<TCComponentDataset> templates = getTemplates();
 				for (TCComponentDataset template : templates) {
-					TCComponentDataset dataset = template.saveAs(id + "-" + template.getProperty("object_name"));
+					String cx_name = form.getProperty("ae8gy_filename");
+					String name = template.getProperty("object_name");
+					TCComponentDataset dataset = template.saveAs(cx_name + name);
 					rev.add(rev.getDefaultPasteRelation(), dataset);
 					if (dataset.getType().startsWith("MSWord")) {
 						MyDatasetUtil.sign(dataset, getValues());
@@ -227,7 +246,6 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		for (TCComponent com : coms) {
 			if (com instanceof TCComponentDataset) {
 				datasets.add((TCComponentDataset)com);
-				break;
 			}
 		}
 		
@@ -256,11 +274,11 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			
 			property_name = "ae8cx_no_unit";
 			desc = masterType.getPropDesc(property_name);
-			InterfacePropertyComponent com =  new PropertyLOV(getLOV(property_name));
-			com.setProperty(property_name);
-			com.load(desc);
-			machiningPanel.add(row + ".3.center.center", (Component) com);
-			coms.add(com);
+			assign_lov1 =  new PropertyLOV(getLOV(property_name));
+			assign_lov1.setProperty(property_name);
+			assign_lov1.load(desc);
+			machiningPanel.add(row + ".3.center.center", (Component) assign_lov1);
+			coms.add(assign_lov1);
 			
 			assignB1 = new JButton("指派");
 			assignB1.addActionListener(this);
@@ -283,11 +301,11 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			
 			property_name = "ae8cx_no_unit";
 			desc = masterType.getPropDesc(property_name);
-			InterfacePropertyComponent com =  new PropertyLOV(getLOV(property_name));
-			com.setProperty(property_name);
-			com.load(desc);
-			machiningPanel.add(row + ".3.center.center", (Component) com);
-			coms.add(com);
+			InterfacePropertyComponent assign_lov2 =  new PropertyLOV(getLOV(property_name));
+			assign_lov2.setProperty(property_name);
+			assign_lov2.load(desc);
+			machiningPanel.add(row + ".3.center.center", (Component) assign_lov2);
+			coms.add(assign_lov2);
 			
 			assignB2 = new JButton("指派");
 			assignB2.addActionListener(this);
@@ -300,34 +318,34 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
-			InterfacePropertyComponent com =  new PropertyTextField();
-			com.setProperty(property_name);
-			com.load(desc);
-			com.setModifiable(false);
-			com.setUIFValue(form.getProperty("ae8part_no"));
+			gy_filename =  new PropertyTextField();
+			gy_filename.setProperty(property_name);
+			gy_filename.load(desc);
+			gy_filename.setModifiable(false);
+			gy_filename.setUIFValue(form.getProperty("ae8part_no"));
 			machiningPanel.add(row + ".1.center.center", lable);
-			machiningPanel.add(row + ".2.center.center", (Component) com);
-			coms.add(com);
+			machiningPanel.add(row + ".2.center.center", (Component) gy_filename);
+			coms.add(gy_filename);
 			
 			property_name = "ae8gy_filename_unit";
 			desc = masterType.getPropDesc(property_name);
-			com = new PropertyLOV(getLOV(property_name));;
-			com.setProperty(property_name);
-			com.load(desc);
-			machiningPanel.add(row + ".3.center.center", (Component) com);
-			coms.add(com);
+			gy_filename_unit = new PropertyLOV(getLOV(property_name));;
+			gy_filename_unit.setProperty(property_name);
+			gy_filename_unit.load(desc);
+			machiningPanel.add(row + ".3.center.center", (Component) gy_filename_unit);
+			coms.add(gy_filename_unit);
 			
 			property_name = "ae8gx_no1";
 			desc = masterType.getPropDesc(property_name);
-			com = new PropertyTextField();
-			com.setProperty(property_name);
-			com.load(desc);
-			((PropertyTextField)com).setColumns(4);
-			com.setUIFValue(form.getProperty("ae8gx_no"));
-			com.setModifiable(false);
+			gx_no = new PropertyTextField();
+			gx_no.setProperty(property_name);
+			gx_no.load(desc);
+			((PropertyTextField)gx_no).setColumns(4);
+			gx_no.setUIFValue(form.getProperty("ae8gx_no"));
+			gx_no.setModifiable(false);
 			
-			machiningPanel.add(row + ".4.center.center", (Component) com);
-			coms.add(com);
+			machiningPanel.add(row + ".4.center.center", (Component) gx_no);
+			coms.add(gx_no);
 			row++;
 		}
 		
@@ -446,14 +464,28 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	}
 	
 	public TCComponentForm createForm(String name) throws TCException {
-		TCComponentForm form = masterType.create(name, "", formType);
+		TCComponentForm masterForm = masterType.create(name, "", formType);
 		Map<String, String> properties = getValues();
-		form.setProperties(properties);
-		return form;
+		masterForm.setProperties(properties);
+		return masterForm;
 	}
 	
-	public Map<String, String> getValues(){
+	public Map<String, String> getValues() throws TCException{
 		Map<String, String> properties = new HashMap<>();
+		if (form != null) {
+			String[] values = session.getPreferenceService().getStringValues(MENCMachiningMasterSYNCOperationMasterProps);
+			if (values != null) {
+				for (String value : values) {
+					String[] info = value.split("=");
+					if (info.length != 2) {
+						continue;
+					}
+					String name = info[0];
+					String value_name = info[1];
+					properties.put(name, form.getProperty(value_name));
+				}
+			}
+		}
 		for (InterfacePropertyComponent com : coms) {
 			Object obj = com.getEditableValue();
 			if (obj == null) {
@@ -479,29 +511,30 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	
 	public void assign1() throws TCException {
 		String str = assign_text1.getText();
+		String unit = (String)assign_lov1.getEditableValue();
 		if (str.isEmpty()) {
-			assign_text1.setText(getNumber());
+			assign_text1.setText(getNumber("AE8CXIDRule", 2, unit));
 		}
 	}
 	
 	public void assign2() throws TCException {
 		String str = assign_text2.getText();
+		String unit = (String)assign_lov1.getEditableValue();
 		if (str.isEmpty()) {
-			assign_text2.setText(getNumber());
+			assign_text2.setText(getNumber("AE8QRBIDRule",3,unit));
 		}
 	}
 	
-	public String getNumber() throws TCException {
-		TCComponentItemType itemType = (TCComponentItemType) session.getTypeComponent("AE8ItemIDRule");
-		
-		return itemType.getNewID();
-	}
-	
-	public void select() {
-		
+	public String getNumber(String type, int insert, String unit) throws TCException {
+		TCComponentItemType itemType = (TCComponentItemType) session.getTypeComponent(type);
+		String id = itemType.getNewID();
+		StringBuilder sb = new StringBuilder(id);
+		sb.insert(insert, unit);
+		return sb.toString();
 	}
 	
 	public void syncDeviceValue(TCComponent com) throws TCException {
+		setPart(com);
 		String id = "";
 		String no = "";
 		String type = "";
@@ -514,5 +547,15 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		jc_name.setText(id);
 		sb_no.setText(no);
 		os.setText(type);
+	}
+	
+	public void setPart(TCComponent com) throws TCException {
+		TCComponentItemRevision rev = null;
+		if (com instanceof TCComponentItemRevision) {
+			rev = (TCComponentItemRevision) com;
+		} else if (com instanceof TCComponentItem) {
+			rev = ((TCComponentItem) com).getLatestItemRevision();
+		}
+		this.partRev = rev;
 	}
 }

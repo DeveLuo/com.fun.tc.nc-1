@@ -56,30 +56,30 @@ public class RacDatasetUtil {
 		return racDatasetFiles;
 	}
 	
-	public static String[] getTCFile(TCComponentDataset dataset, String folderName) throws Exception{
+	public static void getTCFile(TCComponentDataset dataset, String folderName) throws Exception {
 		
-	      String datasetName = dataset.getProperty("object_name");
-
-	      TCComponentDatasetDefinition datasetDef = dataset.getDatasetDefinitionComponent();
-
-	      NamedReferenceContext[] nameRefContexts = datasetDef.getNamedReferenceContexts();
-	      if ((nameRefContexts == null) || (nameRefContexts.length == 0)) return null;
-
-	      NamedReferenceContext nf = nameRefContexts[0];
-	      String namedRef = nf.getNamedReference();
-
-	      String[] fileNames = dataset.getFileNames(namedRef);
-	      if ((fileNames == null) || (fileNames.length == 0)) return null;
-
-	      for (String fileName : fileNames) {
-	        File ret = dataset.getFile(namedRef, fileName, folderName);
-
-	        if (ret == null) {
-	        	System.out.println("下载文件异常：" + folderName + "/" + fileName);
-	        }
-
-	        System.out.println(fileName + " = " + datasetName);
-	      }
-	      return fileNames;
-	  }
+		String datasetName = dataset.getProperty("object_name");
+		
+		TCComponentDatasetDefinition datasetDef = dataset.getDatasetDefinitionComponent();
+		
+		NamedReferenceContext[] nameRefContexts = datasetDef.getNamedReferenceContexts();
+		if (nameRefContexts != null) {
+			for (NamedReferenceContext nameRefContext : nameRefContexts) {
+				String namedRef = nameRefContext.getNamedReference();
+				String[] fileNames = dataset.getFileNames(namedRef);
+				if (fileNames == null) {
+					continue;
+				}
+				for (String fileName : fileNames) {
+					File ret = dataset.getFile(namedRef, fileName, folderName);
+					if (ret == null) {
+						System.out.println("下载文件异常：" + folderName + "/" + fileName);
+						continue;
+					}
+					System.out.println(fileName + " = " + datasetName);
+				}
+			}
+		}
+	      
+	}
 }

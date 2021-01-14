@@ -49,6 +49,7 @@ public class UploadingCAMHandler extends AbstractHandler{
 								File file = new File(dir);
 								MyDatasetUtil.createDatesetByMENCMachining(rev, fileNames[i], file);
 							}
+							MessageBox.post("上传成功","提示",MessageBox.INFORMATION);
 						} catch (Exception e) {
 							MessageBox.post(e);
 							e.printStackTrace();

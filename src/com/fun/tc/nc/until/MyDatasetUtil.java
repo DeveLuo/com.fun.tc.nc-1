@@ -1,7 +1,6 @@
 package com.fun.tc.nc.until;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,13 +10,11 @@ import java.util.Map;
 
 import javax.swing.JOptionPane;
 
-import com.motey.transformer.Main;
 import com.motey.transformer.command.Signer;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentDataset;
 import com.teamcenter.rac.kernel.TCComponentDatasetType;
-import com.teamcenter.rac.kernel.TCComponentFolderType;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
 
@@ -62,25 +59,69 @@ public class MyDatasetUtil {
 		
 		TCComponent activity = tcc.getRelatedComponent("root_activity");
 		TCComponent program = activity.getRelatedComponent("contents");
-		String program_name = tcc.getProperty("item_id");
 		if (program == null) {
+			String program_name = tcc.getProperty("item_id");
 			TCSession session = tcc.getSession();
-			TCComponentFolderType folderType = (TCComponentFolderType) session.getTypeComponent("MENCProgram");
-			program = folderType.create(program_name, "MENCProgram", "MENCProgram");
+			program = RACCreateUtil.create(session, program_name, "MENCProgram", "MENCProgram", null);
 			activity.add("contents", program);
 		}
 		TCComponent[] coms = program.getRelatedComponents("contents");
+		boolean flag = false;
+		TCComponent ds = null;
+		// 当前数据集是否已存在
 		for (TCComponent com : coms) {
 			if (com instanceof TCComponentDataset) {
 				if (name.equals(com.getProperty("object_name"))) {
-					int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
-					if (choice == 0) {
-						TCComponentDataset dataset = createDateset(tcc, name, file);
-						program.add("contents", dataset);
-						program.remove("contents", com);
-					}
+					ds = com;
+					flag = true;
+					break;
 				}
 			}
+		}
+		// 没有相同名称数据集，直接创建
+		if (!flag) {
+			TCComponentDataset dataset = createDateset(tcc, name, file);
+			program.add("contents", dataset);
+			program.refresh();
+			return;
+		}
+		int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
+		if (choice == 0) {
+			TCComponentDataset dataset = createDateset(tcc, name, file);
+			program.add("contents", dataset);
+			program.remove("contents", ds);
+			program.refresh();
+		}
+	}
+	
+	public static void createPDFDatesetByMENCMachining(TCComponent tcc, String name, File file) throws Exception {
+		String ref_name = tcc.getDefaultPasteRelation();
+		TCComponent[] coms = tcc.getRelatedComponents(ref_name);
+		boolean flag = false;
+		TCComponent ds = null;
+		// 当前数据集是否已存在
+		for (TCComponent com : coms) {
+			if (com instanceof TCComponentDataset) {
+				if (name.equals(com.getProperty("object_name"))) {
+					ds = com;
+					flag = true;
+					break;
+				}
+			}
+		}
+		// 没有相同名称数据集，直接创建
+		if (!flag) {
+			TCComponentDataset dataset = createDateset(tcc, name, file);
+			tcc.add(ref_name, dataset);
+			tcc.refresh();
+			return;
+		}
+		int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
+		if (choice == 0) {
+			TCComponentDataset dataset = createDateset(tcc, name, file);
+			tcc.add(ref_name, dataset);
+			tcc.remove(ref_name, ds);
+			tcc.refresh();
 		}
 	}
 	
@@ -195,8 +236,8 @@ public class MyDatasetUtil {
 			refType = "SF8_MWP";
 		} else if (fileType.contains("SF8_EXB")) {
 			refType = "SF8_EXB";
-		}else if (fileType.contains("CAEAnalysisDS")) {
-			refType = "CAEAnalysisData";
+		}else if (fileType.contains("UGCAMPTP")) {
+			refType = "Fnd0MPF";
 		}
 		
 
@@ -264,8 +305,8 @@ public class MyDatasetUtil {
 			datesetType = "SF8_MWP";
 		} else if (fileName.endsWith("exb")) {
 			datesetType = "SF8_EXB";
-		} else if(fileName.endsWith("MPF")) {
-			datesetType = "CAEAnalysisDS";
+		} else if(fileName.endsWith("MPF") || fileName.endsWith("mpf")) {
+			datesetType = "UGCAMPTP";
 		} 
 		
 		if (datesetType == null) {
