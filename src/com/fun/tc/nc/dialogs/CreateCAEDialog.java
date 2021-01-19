@@ -482,7 +482,12 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 					}
 					String name = info[0];
 					String value_name = info[1];
-					properties.put(name, form.getProperty(value_name));
+					if (value_name.startsWith("revision.")) {
+						value_name = value_name.replace("revision.", "");
+						properties.put(name, relationRev.getProperty(value_name));
+					} else {
+						properties.put(name, form.getProperty(value_name));
+					}
 				}
 			}
 		}
