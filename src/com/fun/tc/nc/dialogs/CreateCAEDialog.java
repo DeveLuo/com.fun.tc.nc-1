@@ -116,13 +116,15 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 
 	private PropertyTextField gx_no;
 	
+	TCComponentItemRevision relationParentRev;
 	
-	public CreateCAEDialog(TCComponentBOMLine line, TCComponentItemRevision relationRev) throws Exception {
+	public CreateCAEDialog(TCComponentBOMLine line, TCComponentItemRevision relationRev, TCComponentItemRevision relationParentRev) throws Exception {
 		super(AIFUtility.getActiveDesktop());
 		setTitle("新建数控工序");
 		this.line = line;
 		this.processRev = line.getItemRevision();
 		this.relationRev = relationRev;
+		this.relationParentRev = relationParentRev;
 		session = line.getSession();
 		relationFormPros = session.getPreferenceService().getStringValues(AE8OperationRevisionMasterDisplayProps);
 		formPros = session.getPreferenceService().getStringValues(MENCMachiningRevisionMasterCreateProps);
@@ -485,6 +487,9 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 					if (value_name.startsWith("revision.")) {
 						value_name = value_name.replace("revision.", "");
 						properties.put(name, relationRev.getProperty(value_name));
+					} else if(value_name.startsWith("parentrevision.")) {
+						value_name = value_name.replace("parentrevision.", "");
+						properties.put(name, relationParentRev.getProperty(value_name));
 					} else {
 						properties.put(name, form.getProperty(value_name));
 					}
