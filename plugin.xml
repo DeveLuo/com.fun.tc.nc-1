@@ -9,7 +9,7 @@
             id="com.fun.tc.nc.commands.CreateCAM">
       </command>
       <command
-            name="创建数控工艺"
+            name="创建数控工序"
             id="com.fun.tc.nc.commands.CreateCAE">
       </command>
       <command

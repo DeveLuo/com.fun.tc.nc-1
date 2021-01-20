@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,6 @@ import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCComponentItemType;
 import com.teamcenter.rac.kernel.TCException;
-import com.teamcenter.rac.kernel.TCProperty;
 import com.teamcenter.rac.kernel.TCPropertyDescriptor;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.stylesheet.InterfacePropertyComponent;
@@ -74,19 +74,11 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	
 	TCComponentItemRevision relationRev;
 	
-	String[] relationFormPros;
-	
-	String[] formPros;
-	
-	String MENCMachiningRevisionMasterCreateProps = "MENCMachiningRevisionMasterCreateProps";
-	
-	String AE8OperationRevisionMasterDisplayProps = "AE8OperationRevisionMasterDisplayProps";
-	
 	String MENCMachiningTemplate = "MENCMachiningTemplate";
 	
 	String MENCMachiningMasterSYNCOperationMasterProps = "MENCMachiningMasterSYNCOperationMasterProps";
 	
-	List<InterfacePropertyComponent> coms = new ArrayList<>();
+	List<InterfacePropertyComponent> coms = new ArrayList<InterfacePropertyComponent>();
 
 	private JButton assignB1;
 
@@ -117,6 +109,8 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	private PropertyTextField gx_no;
 	
 	TCComponentItemRevision relationParentRev;
+
+	private TCComponent parentForm;
 	
 	public CreateCAEDialog(TCComponentBOMLine line, TCComponentItemRevision relationRev, TCComponentItemRevision relationParentRev) throws Exception {
 		super(AIFUtility.getActiveDesktop());
@@ -126,8 +120,6 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		this.relationRev = relationRev;
 		this.relationParentRev = relationParentRev;
 		session = line.getSession();
-		relationFormPros = session.getPreferenceService().getStringValues(AE8OperationRevisionMasterDisplayProps);
-		formPros = session.getPreferenceService().getStringValues(MENCMachiningRevisionMasterCreateProps);
 		itemType = (TCComponentItemType) session.getTypeComponent(type);
 		masterType = (TCComponentFormType) session.getTypeComponent(formType);
 		String name = relationRev.getProperty("object_name");
@@ -154,10 +146,11 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		titlePanel.add("1.2.center.center", createPanel);
 			
 		form = relationRev.getRelatedComponent("IMAN_master_form_rev");
+		parentForm = relationParentRev.getRelatedComponent("IMAN_master_form_rev");
 		JSplitPane splitPane =  new JSplitPane();
 		splitPane.setBorder(BorderFactory.createTitledBorder("相关信息"));
 		JPanel machiningPanel = createLeftPanel(masterType);
-		JPanel relationPanel = createRightPanel(form);
+		JPanel relationPanel = createRightPanel(masterType);
 		splitPane.setLeftComponent(machiningPanel);
 		splitPane.setRightComponent(relationPanel);
 //		splitPane.setDividerLocation(0.5D);
@@ -233,16 +226,16 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	}
 	
 	public List<TCComponentDataset> getTemplates() throws TCException {
-		List<TCComponentDataset> datasets = new ArrayList<>();
+		List<TCComponentDataset> datasets = new ArrayList<TCComponentDataset>();
 		String id = session.getPreferenceService().getStringValue(MENCMachiningTemplate);
 		if (id == null || id.isEmpty()) {
 			return datasets;
 		}
-		TCComponentItem[] items = itemType.findItems(id);
-		if (items == null || items.length == 0) {
+		@SuppressWarnings("deprecation")
+		TCComponentItem item = itemType.find(id);
+		if (item == null ) {
 			return datasets;
 		}
-		TCComponentItem item = items[0];
 		TCComponentItemRevision rev = item.getLatestItemRevision();
 		TCComponent[] coms = rev.getRelatedComponents("IMAN_specification");
 		for (TCComponent com : coms) {
@@ -262,7 +255,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		int row = 1;
 		
 		String property_name = "ae8cx_no";
-		TCPropertyDescriptor desc = masterType.getPropDesc(property_name);
+		TCPropertyDescriptor desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -275,7 +268,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			coms.add(assign_text1);
 			
 			property_name = "ae8cx_no_unit";
-			desc = masterType.getPropDesc(property_name);
+			desc = masterType.getPropertyDescriptor(property_name);
 			assign_lov1 =  new PropertyLOV(getLOV(property_name));
 			assign_lov1.setProperty(property_name);
 			assign_lov1.load(desc);
@@ -289,7 +282,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8qrb_no";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -302,7 +295,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			coms.add(assign_text2);
 			
 			property_name = "ae8cx_no_unit";
-			desc = masterType.getPropDesc(property_name);
+			desc = masterType.getPropertyDescriptor(property_name);
 			InterfacePropertyComponent assign_lov2 =  new PropertyLOV(getLOV(property_name));
 			assign_lov2.setProperty(property_name);
 			assign_lov2.load(desc);
@@ -316,7 +309,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8gy_filename";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -330,7 +323,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			coms.add(gy_filename);
 			
 			property_name = "ae8gy_filename_unit";
-			desc = masterType.getPropDesc(property_name);
+			desc = masterType.getPropertyDescriptor(property_name);
 			gy_filename_unit = new PropertyLOV(getLOV(property_name));;
 			gy_filename_unit.setProperty(property_name);
 			gy_filename_unit.load(desc);
@@ -338,7 +331,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			coms.add(gy_filename_unit);
 			
 			property_name = "ae8gx_no1";
-			desc = masterType.getPropDesc(property_name);
+			desc = masterType.getPropertyDescriptor(property_name);
 			gx_no = new PropertyTextField();
 			gx_no.setProperty(property_name);
 			gx_no.load(desc);
@@ -352,7 +345,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8cx_state";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -366,7 +359,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8cxfz";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -386,7 +379,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		row++;
 		
 		property_name = "ae8sb_no";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -401,7 +394,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8jc_id";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -416,7 +409,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		}
 		
 		property_name = "ae8os";
-		desc = masterType.getPropDesc(property_name);
+		desc = masterType.getPropertyDescriptor(property_name);
 		if (desc != null) {
 			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
@@ -438,29 +431,31 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		return values == null ? new String[0]: values;
 	}
 	
-	public JPanel createRightPanel(TCComponent form) throws Exception {
+	public JPanel createRightPanel(TCComponentFormType masterType) throws Exception {
 		JPanel relationPanel = new JPanel();
-		relationPanel.setBorder(BorderFactory.createTitledBorder("关联机加工序信息"));
+		relationPanel.setBorder(BorderFactory.createTitledBorder("关联数控工序信息"));
 		relationPanel.setLayout(new PropertyLayout());
 		relationPanel.setBackground(Color.WHITE);
-		if (form != null) {
-			int row = 1;
-			for (String formPro : relationFormPros) {
-				TCProperty tcp = form.getTCProperty(formPro);
-				if (tcp == null) {
-					System.out.println(form.getType() + " 表单中没有属性：" + formPro);
-					continue;
-				}
-				PropertyNameLabel lable = new PropertyNameLabel();
-				lable.load(tcp);
-				
-				PropertyTextField textField = new PropertyTextField();
-				textField.load(tcp);
-				textField.setEditable(false);
-				relationPanel.add(row + ".1.center.center", lable);
-				relationPanel.add(row + ".2.center.center", textField);
-				row++;
+		int row = 1;
+		Map<String, String> properties = getSyncValues();
+		for (String property_name : properties.keySet()) {
+			TCPropertyDescriptor desc = masterType.getPropertyDescriptor(property_name);
+			if (desc == null) {
+				System.out.println("数控工序版本表单（"+masterType.getType()+ "）中没有属性：" + property_name);
+				continue;
 			}
+			String value = properties.get(property_name);
+			PropertyNameLabel lable = new PropertyNameLabel();
+			lable.load(desc);
+			PropertyTextField textField =  new PropertyTextField();
+			textField.setProperty(property_name);
+			textField.load(desc);
+			textField.setUIFValue(value);
+			textField.setEditable(false);
+			relationPanel.add(row + ".1.center.center", lable);
+			relationPanel.add(row + ".2.center.center", textField);
+			row++;
+			coms.add(textField);
 		}
 		return relationPanel;
 	}
@@ -472,30 +467,33 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		return masterForm;
 	}
 	
-	public Map<String, String> getValues() throws TCException{
-		Map<String, String> properties = new HashMap<>();
-		if (form != null) {
-			String[] values = session.getPreferenceService().getStringValues(MENCMachiningMasterSYNCOperationMasterProps);
-			if (values != null) {
-				for (String value : values) {
-					String[] info = value.split("=");
-					if (info.length != 2) {
-						continue;
-					}
-					String name = info[0];
-					String value_name = info[1];
-					if (value_name.startsWith("revision.")) {
-						value_name = value_name.replace("revision.", "");
-						properties.put(name, relationRev.getProperty(value_name));
-					} else if(value_name.startsWith("parentrevision.")) {
-						value_name = value_name.replace("parentrevision.", "");
-						properties.put(name, relationParentRev.getProperty(value_name));
-					} else {
-						properties.put(name, form.getProperty(value_name));
-					}
+	public Map<String, String> getSyncValues()throws TCException{
+		Map<String, String> properties = new LinkedHashMap<String, String>();
+		String[] values = session.getPreferenceService().getStringValues(MENCMachiningMasterSYNCOperationMasterProps);
+		if (values != null) {
+			for (String value : values) {
+				String[] info = value.split("=");
+				if (info.length != 2) {
+					continue;
+				}
+				String name = info[0];
+				String value_name = info[1];
+				if (value_name.startsWith("revision.")) {
+					value_name = value_name.replace("revision.", "");
+					properties.put(name, relationRev.getProperty(value_name));
+				} else if(value_name.startsWith("parentmaster.")) {
+					value_name = value_name.replace("parentmaster.", "");
+					properties.put(name, parentForm.getProperty(value_name));
+				} else {
+					properties.put(name, form.getProperty(value_name));
 				}
 			}
 		}
+		return properties;
+	}
+	
+	public Map<String, String> getValues() throws TCException{
+		Map<String, String> properties = new HashMap<String, String>();
 		for (InterfacePropertyComponent com : coms) {
 			Object obj = com.getEditableValue();
 			if (obj == null) {
