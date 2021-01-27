@@ -82,4 +82,22 @@ public class RacDatasetUtil {
 		}
 	      
 	}
+	
+	public static File getFile(TCComponentDataset dataset) throws Exception {
+		TCComponentDatasetDefinition datasetDef = dataset.getDatasetDefinitionComponent();
+		NamedReferenceContext[] nameRefContexts = datasetDef.getNamedReferenceContexts();
+		if (nameRefContexts != null) {
+			for (NamedReferenceContext nameRefContext : nameRefContexts) {
+				String namedRef = nameRefContext.getNamedReference();
+				String[] fileNames = dataset.getFileNames(namedRef);
+				if (fileNames == null || fileNames.length == 0) {
+					continue;
+				}
+				for (String fileName : fileNames) {
+					return dataset.getFile(namedRef, fileName);
+				}
+			}
+		}
+	    return null;  
+	}
 }
