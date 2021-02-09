@@ -128,9 +128,9 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		titlePanel.setBorder(BorderFactory.createTitledBorder("MENCMachining"));
 		titlePanel.add("1.1.center.center", new JLabel("  ID/版本.名称："));
 		JPanel createPanel = new JPanel();
-		idText = new JTextField(10);
-		revText = new JTextField(2);
-		nameText = new JTextField(18);
+		idText = new JTextField(12);
+		revText = new JTextField(3);
+		nameText = new JTextField(24);
 		nameText.setText(name + "数控工序");
 		idText.setEditable(false);
 		revText.setEditable(false);
@@ -263,6 +263,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			assign_text1.setProperty(property_name);
 			assign_text1.load(desc);
 //			assign_text1.setModifiable(false);
+			assign_text1.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", assign_text1);
 			coms.add(assign_text1);
@@ -290,6 +291,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			assign_text2.setProperty(property_name);
 			assign_text2.load(desc);
 //			assign_text2.setModifiable(false);
+			assign_text2.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", assign_text2);
 			coms.add(assign_text2);
@@ -318,6 +320,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			gy_filename.load(desc);
 			gy_filename.setModifiable(false);
 			gy_filename.setUIFValue(form.getProperty("ae8part_no"));
+			gy_filename.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", (Component) gy_filename);
 			coms.add(gy_filename);
@@ -387,6 +390,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			jc_name.setProperty(property_name);
 			jc_name.load(desc);
 			jc_name.setModifiable(false);
+			jc_name.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", (Component) jc_name);
 			coms.add(jc_name);
@@ -402,6 +406,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			sb_no.setProperty(property_name);
 			sb_no.load(desc);
 			sb_no.setModifiable(false);
+			sb_no.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", (Component) sb_no);
 			coms.add(sb_no);
@@ -417,6 +422,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			os.setProperty(property_name);
 			os.load(desc);
 			os.setModifiable(false);
+			os.setColumns(16);
 			machiningPanel.add(row + ".1.center.center", lable);
 			machiningPanel.add(row + ".2.center.center", (Component) os);
 			coms.add(os);
@@ -452,6 +458,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 			textField.load(desc);
 			textField.setUIFValue(value);
 			textField.setEditable(false);
+			textField.setColumns(24);
 			relationPanel.add(row + ".1.center.center", lable);
 			relationPanel.add(row + ".2.center.center", textField);
 			row++;

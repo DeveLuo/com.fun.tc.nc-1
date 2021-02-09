@@ -12,11 +12,16 @@ import javax.swing.JOptionPane;
 
 import com.motey.transformer.command.Signer;
 import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.NamedReferenceContext;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentDataset;
+import com.teamcenter.rac.kernel.TCComponentDatasetDefinition;
+import com.teamcenter.rac.kernel.TCComponentDatasetDefinitionType;
 import com.teamcenter.rac.kernel.TCComponentDatasetType;
+import com.teamcenter.rac.kernel.TCComponentTask;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
+import com.teamcenter.rac.util.MessageBox;
 
 public class MyDatasetUtil {
 
@@ -78,64 +83,135 @@ public class MyDatasetUtil {
 				}
 			}
 		}
+		
+		
 		// 没有相同名称数据集，直接创建
 		if (!flag) {
-			TCComponentDataset dataset = createDateset(tcc, name, file);
+			TCComponentDataset dataset = createDatasetByType(tcc.getSession(), name, "UGCAMPTP" ,file);
 			program.add("contents", dataset);
 			program.refresh();
 			return;
 		}
 		int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
 		if (choice == 0) {
-			TCComponentDataset dataset = createDateset(tcc, name, file);
+			TCComponentDataset dataset =createDatasetByType(tcc.getSession(), name, "UGCAMPTP", file);
 			program.add("contents", dataset);
 			program.remove("contents", ds);
 			program.refresh();
 		}
 	}
 	
-	public static void createPDFDatesetByMENCMachining(TCComponent tcc, String name, File file) throws Exception {
+	public static TCComponentDataset createDatasetByType(TCSession session, String name, String datasetType, File file) throws TCException {
+		TCComponentDatasetDefinitionType definitionType = (TCComponentDatasetDefinitionType) session.getTypeComponent("DatasetType");
+		TCComponentDatasetType type = (TCComponentDatasetType) session.getTypeComponent(datasetType);
+		TCComponentDatasetDefinition def = definitionType.find(datasetType);
+		
+		NamedReferenceContext[] nameRefContexts = def.getNamedReferenceContexts();
+		String ref = null;
+		String file_name = file.getName();
+		for (NamedReferenceContext nameRefContext : nameRefContexts) {
+			String file_format = nameRefContext.getFileTemplate();
+			file_format = file_format.substring(1,file_format.length());
+			if (file_format.endsWith("*") || file_name.endsWith(file_format)) {
+				ref = nameRefContext.getNamedReference();
+				break;
+			}
+		}
+		if (ref == null ||ref.isEmpty()) {
+			throw new TCException(datasetType + "数据集类型不支持上传[" + file_name + "]的文件类型");
+		}
+		TCComponentDataset dataset = type.create(name, "", datasetType);
+		String[] refs = new String[] { ref };
+		String[] files = new String[] { file.getAbsolutePath() };
+		dataset.setFiles(files, refs);
+		return dataset;
+	}
+	
+	public static void uploadPDFByMENCMachining(TCComponent tcc, TCComponentTask task, String name, File file) throws Exception {
 		String ref_name = tcc.getDefaultPasteRelation();
 		TCComponent[] coms = tcc.getRelatedComponents(ref_name);
-		boolean flag = false;
-		TCComponent ds = null;
 		// 当前数据集是否已存在
+		TCComponentDataset dataset = null;
+		TCComponentDataset new_dataset = null;
 		for (TCComponent com : coms) {
 			if (com instanceof TCComponentDataset) {
 				if (name.equals(com.getProperty("object_name"))) {
-					ds = com;
-					flag = true;
+					dataset = (TCComponentDataset) com;
 					break;
 				}
 			}
 		}
 		// 没有相同名称数据集，直接创建
-		if (!flag) {
-			TCComponentDataset dataset = createDateset(tcc, name, file);
+		if (dataset == null) {
+			new_dataset = createDateset(tcc, name, file);
+		} else {
+			// 有相同数据集名称时，通过弹出信息判断是否覆盖
+			int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
+			if (choice == 0) {
+				new_dataset = createDateset(tcc, name, file);
+				tcc.remove(ref_name, dataset);
+				if (task != null) {
+					task.remove("root_target_attachments",dataset);
+				}
+			}
+		}
+		// 更新数据集,添加数据集到任务
+		if (new_dataset != null) {
+			tcc.add(ref_name, new_dataset);
+			tcc.refresh();
+			if (task != null) {
+				task.add("root_target_attachments",new_dataset);
+			}
+			MessageBox.post("上传成功","提示",MessageBox.INFORMATION);
+		}
+		
+	}
+	
+	
+	public static TCComponentDataset createPDFDatesetByMENCMachining(TCComponent tcc, String name, File file) throws Exception {
+		String ref_name = tcc.getDefaultPasteRelation();
+		TCComponent[] coms = tcc.getRelatedComponents(ref_name);
+		// 当前数据集是否已存在
+		TCComponentDataset dataset = null;
+		for (TCComponent com : coms) {
+			if (com instanceof TCComponentDataset) {
+				if (name.equals(com.getProperty("object_name"))) {
+					dataset = (TCComponentDataset) com;
+					break;
+				}
+			}
+		}
+		// 没有相同名称数据集，直接创建
+		if (dataset == null) {
+			dataset = createDateset(tcc, name, file);
 			tcc.add(ref_name, dataset);
 			tcc.refresh();
-			return;
+			return dataset;
 		}
+		// 有相同数据集名称时，通过弹出信息判断是否覆盖
 		int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
 		if (choice == 0) {
-			TCComponentDataset dataset = createDateset(tcc, name, file);
+			tcc.remove(ref_name, dataset);
+			dataset = createDateset(tcc, name, file);
 			tcc.add(ref_name, dataset);
-			tcc.remove(ref_name, ds);
 			tcc.refresh();
 		}
+		return dataset;
 	}
 	
 	public static List<TCComponentDataset> getDatesetByMENCMachining(TCComponent tcc) throws TCException{
 		List<TCComponentDataset> datasets = new ArrayList<TCComponentDataset>();
 		TCComponent activity = tcc.getRelatedComponent("root_activity");
-		TCComponent[] programs = activity.getRelatedComponents("contents");
-		if (programs != null && programs.length > 0) {
-			for (TCComponent program : programs) {
-				TCComponent[] coms = program.getRelatedComponents("contents");
+		TCComponent[] contents = activity.getRelatedComponents("contents");
+		if (contents != null && contents.length > 0) {
+			for (TCComponent content : contents) {
+				if (content instanceof TCComponentDataset) {
+					datasets.add((TCComponentDataset)content);
+				}
+				TCComponent[] coms = content.getRelatedComponents("contents");
 				if (coms != null) {
 					for (TCComponent com : coms) {
-						String name = com.toString();
-						if (com instanceof TCComponentDataset && (name.endsWith(".MPF") || name.endsWith(".mpf"))) {
+						if (com instanceof TCComponentDataset) {
 							datasets.add((TCComponentDataset)com);
 						}
 					}

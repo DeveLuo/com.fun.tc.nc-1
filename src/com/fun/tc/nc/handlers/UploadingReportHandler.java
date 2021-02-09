@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.fun.tc.nc.until.MyDatasetUtil;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.util.MessageBox;
@@ -36,16 +37,15 @@ public class UploadingReportHandler extends AbstractHandler{
 				fd.setFilterExtensions(new String[]{"*.pdf"});
 				fd.setFilterNames(new String[]{"PPT Files(*.pdf)"});
 				String file = fd.open();
-				if (file == null) {
+				if (file == null || file.isEmpty()) {
 					return null;
 				}
-				String file_name = fd.getFileName();
-				if (!file_name.endsWith("仿真报告.pdf") && !file_name.endsWith("仿真报告.PDF")) {
-					String name = file_name.substring(0, file_name.length() - 4);
-					String suffix = file_name.substring(file_name.length() - 3, file_name.length());
-					file_name = name + "仿真报告." + suffix;
+				TCComponent form = rev.getRelatedComponent("IMAN_master_form_rev");
+				if (form == null) {
+					MessageBox.post(rev.toDisplayString() + "属性表单不能为空！","提示",MessageBox.INFORMATION);
+					return null;
 				}
-				final String name = file_name;
+				final String name = form.getProperty("ae8gy_filename") + "仿真报告";
 				final File files = new File(file);
 				new Thread(new Runnable() {
 					

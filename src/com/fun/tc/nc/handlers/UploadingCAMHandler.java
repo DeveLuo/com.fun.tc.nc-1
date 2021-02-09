@@ -44,12 +44,14 @@ public class UploadingCAMHandler extends AbstractHandler{
 					@Override
 					public void run() {
 						try {
-							for (int i = 0; i < fileNames.length; i++) {
-								String dir = filterPath+"\\"+fileNames[i];
-								File file = new File(dir);
-								MyDatasetUtil.createDatesetByMENCMachining(rev, fileNames[i], file);
+							if (fileNames != null && fileNames.length > 0) {
+								for (int i = 0; i < fileNames.length; i++) {
+									String dir = filterPath+"\\"+fileNames[i];
+									File file = new File(dir);
+									MyDatasetUtil.createDatesetByMENCMachining(rev, fileNames[i], file);
+								}
+								MessageBox.post("上传成功","提示",MessageBox.INFORMATION);
 							}
-							MessageBox.post("上传成功","提示",MessageBox.INFORMATION);
 						} catch (Exception e) {
 							MessageBox.post(e);
 							e.printStackTrace();

@@ -16,19 +16,23 @@
             name="数控工序修订"
             id="com.fun.tc.nc.commands.ReviseCAE">
       </command>
-            <command
+      <command
             name="上传数控程序"
             id="com.fun.tc.nc.commands.UploadingCAM">
       </command>
-            <command
+      <command
             name="下载数控程序"
             id="com.fun.tc.nc.commands.DownloadCAM">
       </command>
-            <command
+      <command
             name="上传仿真报告"
             id="com.fun.tc.nc.commands.UploadingReport">
       </command>
-            <command
+      <command
+            name="上传确认报告"
+            id="com.fun.tc.nc.commands.UploadingConfirmReport">
+      </command>      
+      <command
             name="数控程序确认表目录"
             id="com.fun.tc.nc.commands.CNCProgramCatalogue">
       </command>
@@ -106,6 +110,10 @@
 			</and>
 			</enabledWhen>            
       </handler>
+      <handler
+            class="com.fun.tc.nc.handlers.UploadingConfirmReportHandler"
+            commandId="com.fun.tc.nc.commands.UploadingConfirmReport">                      
+      </handler>
        <handler
             class="com.fun.tc.nc.handlers.ToolingCatalogueHandler"
             commandId="com.fun.tc.nc.commands.ToolingCatalogue">
@@ -154,6 +162,11 @@
              <command
                   commandId="com.fun.tc.nc.commands.UploadingReport"
                   id="com.fun.tc.nc.commands.UploadingReport"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.fun.tc.nc.commands.UploadingConfirmReport"
+                  id="com.fun.tc.nc.commands.UploadingConfirmReport"
                   mnemonic="S">
             </command>
             <command
